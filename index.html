@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Расписание ДТК</title>
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background: linear-gradient(180deg, #0b0f19 0%, #151828 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-title span.logo {
+      font-size: 24px;
+    }
+    .header-title h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .header-title p {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    /* Group Select Dropdown */
+    .group-selector {
+      position: relative;
+    }
+    .group-select {
+      background: #6366f1;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 14px;
+      outline: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 28px;
+    }
+    .group-selector::after {
+      content: "▼";
+      font-size: 8px;
+      color: #ffffff;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    /* Live Status Banner */
+    .live-banner {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .live-banner.break {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .live-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #10b981;
+    }
+    .live-banner.break .live-badge {
+      color: #f59e0b;
+    }
+    .live-badge .dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    .live-banner.break .live-badge .dot {
+      background: #f59e0b;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .live-timer {
+      font-size: 12px;
+      font-weight: 600;
+      color: #10b981;
+    }
+    .live-banner.break .live-timer {
+      color: #f59e0b;
+    }
+    .live-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .live-sub {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    /* Date Header */
+    .date-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 700;
+      color: #cbd5e1;
+      padding: 0 4px;
+    }
+    /* Lessons List */
+    .lessons-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .lesson-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      transition: transform 0.1s ease;
+    }
+    .lesson-card.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .lesson-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .lesson-card.active .lesson-num {
+      background: #10b981;
+      color: #ffffff;
+    }
+    .lesson-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .lesson-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lesson-meta {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .lesson-room {
+      color: #a5b4fc;
+      font-weight: 600;
+    }
+    .lesson-time {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      flex-shrink: 0;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .lesson-card.active .lesson-time {
+      color: #10b981;
+    }
+    /* Empty state */
+    .empty-state {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 32px 16px;
+      text-align: center;
+      color: #64748b;
+    }
+    .empty-state .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      font-size: 13px;
+    }
+    /* Bell Schedule View */
+    .bell-view {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bell-block {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .bell-block h3 {
+      font-size: 13px;
+      color: #a5b4fc;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .bell-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+      color: #cbd5e1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .bell-row:last-child {
+      border-bottom: none;
+    }
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-title">
+        <span class="logo">📚</span>
+        <div>
+          <h1>Расписание ДТК</h1>
+          <p id="updated-text">Синхронизация...</p>
+        </div>
+      </div>
+      <div class="group-selector">
+        <select id="group-select" class="group-select">
+          <option value="20">Группа 20</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Live Status (если идет пара или перемена) -->
+    <div id="live-banner" class="live-banner" style="display: none;">
+      <div class="live-top">
+        <div class="live-badge">
+          <span class="dot"></span>
+          <span id="live-badge-text">СЕЙЧАС ИДЁТ ПАРА</span>
+        </div>
+        <div id="live-timer" class="live-timer">35 мин</div>
+      </div>
+      <div id="live-title" class="live-title">Инженерная графика</div>
+      <div id="live-sub" class="live-sub">каб. 301 • далее перемена</div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('today')">Сегодня</button>
+      <button class="tab-btn" onclick="switchTab('tomorrow')">Завтра</button>
+      <button class="tab-btn" onclick="switchTab('bells')">Звонки</button>
+    </div>
+
+    <!-- Schedule View -->
+    <div id="schedule-view">
+      <div class="date-header" id="date-header">
+        <span id="date-text">Среда, 11 ноября</span>
+        <span id="holiday-badge" style="display: none; color: #10b981; font-size: 12px;">Выходной</span>
+      </div>
+      <div class="lessons-list" id="lessons-list" style="margin-top: 8px;">
+        <!-- Карточки пар загружаются динамически -->
+      </div>
+    </div>
+
+    <!-- Bell Schedule View -->
+    <div id="bell-view" class="bell-view">
+      <div class="bell-block">
+        <h3>Понедельник</h3>
+        <div class="bell-row"><span>Разговоры о важном</span><b>08:30 – 09:00</b></div>
+        <div class="bell-row"><span>1 пара</span><b>09:10 – 10:40</b></div>
+        <div class="bell-row"><span>2 пара</span><b>11:00 – 12:30</b></div>
+        <div class="bell-row"><span>3 пара</span><b>12:50 – 14:20</b></div>
+        <div class="bell-row"><span>4 пара</span><b>14:30 – 16:00</b></div>
+      </div>
+      <div class="bell-block">
+        <h3>Вторник – Пятница</h3>
+        <div class="bell-row"><span>1 пара</span><b>08:30 – 10:00</b></div>
+        <div class="bell-row"><span>2 пара</span><b>10:20 – 11:50</b></div>
+        <div class="bell-row"><span>3 пара</span><b>12:10 – 13:40</b></div>
+        <div class="bell-row"><span>4 пара</span><b>13:50 – 15:20</b></div>
+      </div>
+      <div class="bell-block">
+        <h3>Суббота</h3>
+        <div class="bell-row"><span>1 пара</span><b>08:30 – 09:50</b></div>
+        <div class="bell-row"><span>2 пара</span><b>10:00 – 11:20</b></div>
+        <div class="bell-row"><span>3 пара</span><b>11:30 – 12:50</b></div>
+        <div class="bell-row"><span>4 пара</span><b>13:00 – 14:20</b></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      ДТК Колледж • Автообновление каждые 2 часа
+    </div>
+  </div>
+
+  <script>
+    const DAY_NAMES = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
+    const MONTH_NAMES = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
+
+    let scheduleData = null;
+    let currentTab = "today";
+    let selectedGroup = localStorage.getItem("dtk_group") || "20";
+
+    function getBells(dow) {
+      if (dow === 0) return [];
+      if (dow === 1) return [
+        { num: 0, fixedName: "Разговоры о важном", sh: 8, sm: 30, eh: 9, em: 0 },
+        { num: 1, sh: 9, sm: 10, eh: 10, em: 40 },
+        { num: 2, sh: 11, sm: 0, eh: 12, em: 30 },
+        { num: 3, sh: 12, sm: 50, eh: 14, em: 20 },
+        { num: 4, sh: 14, sm: 30, eh: 16, em: 0 }
+      ];
+      if (dow === 6) return [
+        { num: 1, sh: 8, sm: 30, eh: 9, em: 50 },
+        { num: 2, sh: 10, sm: 0, eh: 11, em: 20 },
+        { num: 3, sh: 11, sm: 30, eh: 12, em: 50 },
+        { num: 4, sh: 13, sm: 0, eh: 14, em: 20 }
+      ];
+      return [
+        { num: 1, sh: 8, sm: 30, eh: 10, em: 0 },
+        { num: 2, sh: 10, sm: 20, eh: 11, em: 50 },
+        { num: 3, sh: 12, sm: 10, eh: 13, em: 40 },
+        { num: 4, sh: 13, sm: 50, eh: 15, em: 20 }
+      ];
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function fmtTime(h, m) { return `${pad(h)}:${pad(m)}`; }
+    function toMin(h, m) { return h * 60 + m; }
+
+    async function loadData() {
+      try {
+        const res = await fetch("data/schedule.json?t=" + Date.now());
+        scheduleData = await res.json();
+        
+        // Обновляем список групп в селекторе
+        const select = document.getElementById("group-select");
+        select.innerHTML = "";
+        
+        let groups = scheduleData.groups_list || Object.keys(scheduleData.groups || {});
+        if (!groups.includes("20")) groups.unshift("20");
+        
+        groups.forEach(g => {
+          const opt = document.createElement("option");
+          opt.value = g;
+          opt.textContent = "Группа " + g;
+          if (g === selectedGroup) opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        const updated = scheduleData.updated_at ? scheduleData.updated_at.slice(11, 16) : "";
+        document.getElementById("updated-text").textContent = updated ? `Обновлено в ${updated}` : "Обновлено онлайн";
+
+      } catch (e) {
+        console.error("Ошибка загрузки данных:", e);
+        document.getElementById("updated-text").textContent = "Оффлайн режим";
+      }
+
+      render();
+      checkLiveStatus();
+    }
+
+    document.getElementById("group-select").addEventListener("change", (e) => {
+      selectedGroup = e.target.value;
+      localStorage.setItem("dtk_group", selectedGroup);
+      render();
+      checkLiveStatus();
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".tab-btn").forEach((btn, idx) => {
+        btn.classList.toggle("active", (tab === "today" && idx === 0) || (tab === "tomorrow" && idx === 1) || (tab === "bells" && idx === 2));
+      });
+
+      document.getElementById("schedule-view").style.display = tab === "bells" ? "none" : "block";
+      document.getElementById("bell-view").style.display = tab === "bells" ? "flex" : "none";
+
+      if (tab !== "bells") {
+        render();
+      }
+    }
+
+    function getLessonsForDate(dateObj) {
+      if (!scheduleData) return null;
+      const dStr = `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}`;
+      const mdStr = `${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}`;
+
+      let grpDict = null;
+      if (scheduleData.groups && scheduleData.groups[selectedGroup]) {
+        grpDict = scheduleData.groups[selectedGroup];
+      } else if (selectedGroup === "20" && scheduleData.schedule) {
+        grpDict = scheduleData.schedule;
+      }
+
+      if (!grpDict) return null;
+      if (grpDict[dStr]) return grpDict[dStr];
+
+      for (const k in grpDict) {
+        if (k.endsWith(mdStr)) return grpDict[k];
+      }
+      return null;
+    }
+
+    function render() {
+      if (currentTab === "bells") return;
+
+      const now = new Date();
+      const targetDate = currentTab === "today" ? now : new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const dow = targetDate.getDay();
+
+      const dayName = DAY_NAMES[dow];
+      const dateText = `${dayName}, ${targetDate.getDate()} ${MONTH_NAMES[targetDate.getMonth()]}`;
+      document.getElementById("date-text").textContent = dateText;
+
+      const container = document.getElementById("lessons-list");
+      container.innerHTML = "";
+
+      if (dow === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">😴</div>
+            <p><b>Воскресенье — выходной!</b><br>Занятий нет, отдыхай.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const bells = getBells(dow);
+      const lessons = getLessonsForDate(targetDate);
+
+      if (!lessons || lessons.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📭</div>
+            <p>Расписание для группы <b>${selectedGroup}</b><br>на этот день пока не появилось</p>
+          </div>
+        `;
+        return;
+      }
+
+      const nowMin = toMin(now.getHours(), now.getMinutes());
+      const isToday = currentTab === "today";
+
+      bells.forEach(b => {
+        let lessonName = b.fixedName || "";
+        let room = "";
+        let teacher = "";
+        let found = false;
+
+        const match = lessons.find(l => l.number === b.num);
+        if (match) {
+          lessonName = match.name;
+          room = match.room || "";
+          teacher = match.teacher || "";
+          found = true;
+        } else if (b.num === 0 && dow === 1) {
+          found = true;
+        }
+
+        if (found) {
+          const startMin = toMin(b.sh, b.sm);
+          const endMin = toMin(b.eh, b.em);
+          const isActive = isToday && nowMin >= startMin && nowMin < endMin;
+
+          const card = document.createElement("div");
+          card.className = "lesson-card" + (isActive ? " active" : "");
+          card.innerHTML = `
+            <div class="lesson-num">${b.num === 0 ? "★" : b.num}</div>
+            <div class="lesson-info">
+              <div class="lesson-name">${lessonName}</div>
+              <div class="lesson-meta">
+                ${room ? `<span class="lesson-room">каб. ${room}</span>` : ""}
+                ${teacher ? `<span>${teacher}</span>` : ""}
+              </div>
+            </div>
+            <div class="lesson-time">${fmtTime(b.sh, b.sm)}–${fmtTime(b.eh, b.em)}</div>
+          `;
+          container.appendChild(card);
+        }
+      });
+    }
+
+    function checkLiveStatus() {
+      const now = new Date();
+      const dow = now.getDay();
+      if (dow === 0) {
+        document.getElementById("live-banner").style.display = "none";
+        return;
+      }
+
+      const bells = getBells(dow);
+      const lessons = getLessonsForDate(now);
+      const nowMin = toMin(now.getHours(), now.getMinutes());
+
+      const banner = document.getElementById("live-banner");
+      let active = null;
+      let next = null;
+
+      for (let i = 0; i < bells.length; i++) {
+        const b = bells[i];
+        const s = toMin(b.sh, b.sm);
+        const e = toMin(b.eh, b.em);
+
+        if (nowMin >= s && nowMin < e) {
+          active = { bell: b, end: e, isBreak: false };
+          if (i + 1 < bells.length) next = bells[i + 1];
+          break;
+        }
+
+        if (i + 1 < bells.length) {
+          const nextStart = toMin(bells[i + 1].sh, bells[i + 1].sm);
+          if (nowMin >= e && nowMin < nextStart) {
+            active = { end: nextStart, isBreak: true, nextBell: bells[i + 1] };
+            break;
+          }
+        }
+      }
+
+      if (active) {
+        banner.style.display = "flex";
+        const rem = active.end - nowMin;
+
+        if (active.isBreak) {
+          banner.className = "live-banner break";
+          document.getElementById("live-badge-text").textContent = "СЕЙЧАС ПЕРЕМЕНА";
+          document.getElementById("live-timer").textContent = `${rem} мин`;
+          
+          let nextName = "Следующая пара";
+          if (lessons) {
+            const m = lessons.find(l => l.number === active.nextBell.num);
+            if (m) nextName = m.name;
+          }
+          document.getElementById("live-title").textContent = "☕ Отдыхаем";
+          document.getElementById("live-sub").textContent = `Далее: ${nextName} в ${fmtTime(active.nextBell.sh, active.nextBell.sm)}`;
+        } else {
+          banner.className = "live-banner";
+          document.getElementById("live-badge-text").textContent = `ПАРА ${active.bell.num || 1}`;
+          document.getElementById("live-timer").textContent = `осталось ${rem} мин`;
+
+          let curName = active.bell.fixedName || "Пара";
+          let curRoom = "";
+          if (lessons) {
+            const m = lessons.find(l => l.number === active.bell.num);
+            if (m) { curName = m.name; curRoom = m.room; }
+          }
+          document.getElementById("live-title").textContent = curName;
+          document.getElementById("live-sub").textContent = `Конец в ${fmtTime(active.bell.eh, active.bell.em)}${curRoom ? ` • каб. ${curRoom}` : ""}`;
+        }
+      } else {
+        banner.style.display = "none";
+      }
+    }
+
+    loadData();
+    setInterval(checkLiveStatus, 30000);
+  </script>
+</body>
+</html>
